@@ -1,4 +1,4 @@
-# 💬 Ripple — Chat Web App
+# Ripple — Chat Web App
 
 A modern frontend chat application with simulated authentication, built using HTML, CSS, and JavaScript. This project demonstrates UI design, client side logic, and user flow without a backend.
 
@@ -12,11 +12,11 @@ A modern frontend chat application with simulated authentication, built using HT
 
 ##Features
 
-* 🔐 Sign In / Create Account (Frontend based)
-* 💾 User data stored using localStorage
-* 💬 Basic chat interface UI
-* 🎨 Clean and responsive design
-* ⚡ Smooth user flow between pages
+* Sign In / Create Account (Frontend based)
+* User data stored using localStorage
+* Basic chat interface UI
+* Clean and responsive design
+* Smooth user flow between pages
 
 ---
 
@@ -40,7 +40,7 @@ This is a **demo implementation** and not secure. No backend or database is used
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 chat-app/

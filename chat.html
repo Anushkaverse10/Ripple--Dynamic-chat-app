@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ripple</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/chat.css" />
+</head>
+<body class="chat-body">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <div class="brand-icon brand-icon-sm">R</div>
+        <span class="brand-name">Ripple</span>
+      </div>
+      <button type="button" class="icon-btn" id="sidebarClose" onclick="closeSidebar()">✕</button>
+    </div>
+
+    <div class="me-card" id="meCard" onclick="goMyProfile()">
+      <div class="av av-md" id="meAv"></div>
+      <div class="me-info">
+        <p class="me-name" id="meName"></p>
+        <p class="me-user" id="meUser"></p>
+      </div>
+      <span class="me-arrow">›</span>
+    </div>
+
+    <p class="sidebar-label">People</p>
+    <div class="user-list" id="userList"></div>
+
+    <div class="sidebar-bottom">
+      <button type="button" class="btn-logout" onclick="handleLogout()">Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <main class="chat-main">
+
+    <header class="chat-bar">
+      <button type="button" class="icon-btn menu-btn" onclick="openSidebar()">☰</button>
+      <div class="chat-bar-info">
+        <div class="av av-sm" id="chatBarAv">💬</div>
+        <div>
+          <p class="chat-bar-name" id="chatBarName">Ripple</p>
+          <p class="chat-bar-sub" id="chatBarSub">Select someone to start chatting</p>
+        </div>
+      </div>
+      <div class="chat-bar-actions">
+        <button type="button" class="icon-btn" id="profileBtn" onclick="viewChatProfile()" style="display:none" title="View Profile">👤</button>
+        <button type="button" class="icon-btn del-btn hidden" id="deleteBtn" onclick="deleteSelected()">🗑 Delete</button>
+      </div>
+    </header>
+
+    <div class="msgs-area" id="msgsArea">
+
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-icon">💬</div>
+        <h2 class="welcome-title">Welcome to Ripple</h2>
+        <p class="welcome-sub">Select a person from the sidebar to start a conversation.<br/>Your messages are saved even after you close the browser.</p>
+        <div class="welcome-features">
+          <div class="wf-item">
+            <span class="wf-icon">⚡</span>
+            <span>Instant messaging</span>
+          </div>
+          <div class="wf-item">
+            <span class="wf-icon">🗑</span>
+            <span>Delete for me or everyone</span>
+          </div>
+          <div class="wf-item">
+            <span class="wf-icon">👤</span>
+            <span>View & edit profiles</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="input-bar">
+      <div class="input-inner">
+        <input
+          type="text"
+          id="msgInput"
+          placeholder="Select a conversation to start typing…"
+          autocomplete="off"
+          disabled
+        />
+        <button type="button" class="send-btn" id="sendBtn" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+<script>
+
+  function getUsers() {
+    try { return JSON.parse(localStorage.getItem('ripple_users') || '[]'); }
+    catch(e) { return []; }
+  }
+  function saveUsers(u) { localStorage.setItem('ripple_users', JSON.stringify(u)); }
+
+  function getCurrentUser() {
+    var u = sessionStorage.getItem('ripple_session');
+    if (!u) return null;
+    var users = getUsers();
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === u) return users[i];
+    }
+    return null;
+  }
+
+  var ME = getCurrentUser();
+  if (!ME) { window.location.href = 'index.html'; }
+
+  function getAllMsgs() {
+    try { return JSON.parse(localStorage.getItem('ripple_msgs') || '{}'); }
+    catch(e) { return {}; }
+  }
+  function saveAllMsgs(data) { localStorage.setItem('ripple_msgs', JSON.stringify(data)); }
+  function convKey(a, b)     { return [a, b].sort().join('__'); }
+  function getConv(other)    { return getAllMsgs()[convKey(ME.username, other)] || []; }
+  function saveConv(other, msgs) {
+    var all = getAllMsgs();
+    all[convKey(ME.username, other)] = msgs;
+    saveAllMsgs(all);
+  }
+
+  var activeChatUser = null;
+  var selectedIds    = [];
+
+  window.addEventListener('DOMContentLoaded', function() {
+    renderSidebar();
+
+    document.getElementById('sendBtn').addEventListener('click', sendMsg);
+    document.getElementById('msgInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') sendMsg();
+    });
+
+    var who = new URLSearchParams(window.location.search).get('with');
+    if (who) {
+      var users = getUsers();
+      for (var i = 0; i < users.length; i++) {
+        if (users[i].username === who && who !== ME.username) {
+          openChat(users[i]); break;
+        }
+      }
+    }
+  });
+
+  function renderSidebar() {
+    document.getElementById('meAv').textContent   = ME.avatar;
+    document.getElementById('meName').textContent = ME.name;
+    document.getElementById('meUser').textContent = '@' + ME.username;
+
+    var others = getUsers().filter(function(u) { return u.username !== ME.username; });
+    var list   = document.getElementById('userList');
+    list.innerHTML = '';
+
+    if (!others.length) {
+      list.innerHTML =
+        '<p style="padding:16px;font-size:0.8rem;color:rgba(255,255,255,0.35);line-height:1.6">' +
+        'No other users yet.<br/>Ask a friend to sign up!</p>';
+      return;
+    }
+
+    var allMsgs = getAllMsgs();
+    others.sort(function(a, b) {
+      var msgsA = allMsgs[convKey(ME.username, a.username)] || [];
+      var msgsB = allMsgs[convKey(ME.username, b.username)] || [];
+      var la    = msgsA.length ? msgsA[msgsA.length - 1].timestamp : 0;
+      var lb    = msgsB.length ? msgsB[msgsB.length - 1].timestamp : 0;
+      return lb - la;
+    });
+
+    others.forEach(function(user) {
+      var msgs    = allMsgs[convKey(ME.username, user.username)] || [];
+      var visible = msgs.filter(function(m) {
+        return !m.deletedForAll && !(m.deletedFor && m.deletedFor.indexOf(ME.username) !== -1);
+      });
+      var last   = visible.length ? visible[visible.length - 1] : null;
+      var unread = msgs.filter(function(m) {
+        return m.to === ME.username && !m.deletedForAll &&
+               !(m.readBy && m.readBy.indexOf(ME.username) !== -1);
+      }).length;
+
+      var row = document.createElement('div');
+      row.className = 'user-row' +
+        (activeChatUser && activeChatUser.username === user.username ? ' active' : '');
+      row.dataset.username = user.username;
+      row.innerHTML =
+        '<div class="av av-sm">' + user.avatar + '</div>' +
+        '<div class="user-row-info">' +
+          '<p class="user-row-name">' + esc(user.name) + '</p>' +
+          '<p class="user-row-preview">' +
+            (last
+              ? (last.from === ME.username ? 'You: ' : '') + esc(last.text)
+              : '@' + user.username) +
+          '</p>' +
+        '</div>' +
+        (unread ? '<div class="unread-dot"></div>' : '');
+
+      (function(u) {
+        row.addEventListener('click', function() { openChat(u); });
+      })(user);
+
+      list.appendChild(row);
+    });
+  }
+
+  function openChat(user) {
+    activeChatUser = user;
+    selectedIds    = [];
+
+    document.getElementById('chatBarAv').textContent   = user.avatar;
+    document.getElementById('chatBarName').textContent = user.name;
+    document.getElementById('chatBarSub').textContent  = '@' + user.username;
+    document.getElementById('profileBtn').style.display = 'flex';
+
+    var input   = document.getElementById('msgInput');
+    var sendBtn = document.getElementById('sendBtn');
+    input.disabled   = false;
+    input.placeholder = 'Message ' + user.name + '…';
+    sendBtn.disabled  = false;
+    sendBtn.classList.add('active');
+
+    document.getElementById('welcomeScreen').style.display = 'none';
+
+    markRead(user.username);
+
+    document.querySelectorAll('.user-row').forEach(function(r) {
+      r.classList.toggle('active', r.dataset.username === user.username);
+    });
+
+    renderMsgs();
+    updateDelBtn();
+
+    if (window.innerWidth <= 720) closeSidebar();
+    setTimeout(function() { input.focus(); }, 80);
+  }
+
+  function markRead(other) {
+    var msgs = getConv(other);
+    msgs.forEach(function(m) {
+      if (m.to === ME.username) {
+        if (!m.readBy) m.readBy = [];
+        if (m.readBy.indexOf(ME.username) === -1) m.readBy.push(ME.username);
+      }
+    });
+    saveConv(other, msgs);
+    renderSidebar();
+  }
+
+  function renderMsgs() {
+    var area = document.getElementById('msgsArea');
+
+    var children = Array.from(area.children);
+    children.forEach(function(c) {
+      if (!c.classList.contains('welcome-screen')) area.removeChild(c);
+    });
+
+    if (!activeChatUser) return;
+
+    var msgs = getConv(activeChatUser.username).filter(function(m) {
+      if (m.deletedForAll) return false;
+      if (m.deletedFor && m.deletedFor.indexOf(ME.username) !== -1) return false;
+      return true;
+    });
+
+    if (!msgs.length) {
+      var empty = document.createElement('div');
+      empty.className = 'empty-conv';
+      empty.innerHTML =
+        '<div class="empty-icon">👋</div>' +
+        '<p>Start the conversation!</p>' +
+        '<span>Say hello to ' + esc(activeChatUser.name) + '</span>';
+      area.appendChild(empty);
+      return;
+    }
+
+    var lastDate = '';
+    msgs.forEach(function(msg) {
+      var dateStr = new Date(msg.timestamp).toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric'
+      });
+      if (dateStr !== lastDate) {
+        var sep = document.createElement('div');
+        sep.className = 'date-sep';
+        sep.innerHTML = '<span>' + dateStr + '</span>';
+        area.appendChild(sep);
+        lastDate = dateStr;
+      }
+
+      var isSent   = msg.from === ME.username;
+      var isSelect = selectedIds.indexOf(msg.id) !== -1;
+      var time     = new Date(msg.timestamp).toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      var row = document.createElement('div');
+      row.className = 'msg-row ' + (isSent ? 'sent' : 'received');
+      row.innerHTML =
+        '<div class="msg-av">' + (isSent ? ME.avatar : activeChatUser.avatar) + '</div>' +
+        '<div class="msg-group">' +
+          '<div class="bubble' + (isSelect ? ' selected' : '') +
+               (msg.deletedForAll ? ' deleted' : '') + '" data-id="' + msg.id + '">' +
+            (msg.deletedForAll ? '🚫 Message deleted' : esc(msg.text)) +
+          '</div>' +
+          '<span class="msg-time">' + time + '</span>' +
+        '</div>';
+
+      if (!msg.deletedForAll) {
+        (function(id) {
+          row.querySelector('.bubble').addEventListener('click', function() {
+            toggleSelect(id);
+          });
+        })(msg.id);
+      }
+
+      area.appendChild(row);
+    });
+
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function sendMsg() {
+    if (!activeChatUser) return;
+    var input = document.getElementById('msgInput');
+    var text  = (input.value || '').trim();
+    if (!text) return;
+
+    var msgs = getConv(activeChatUser.username);
+    msgs.push({
+      id:            Date.now().toString(),
+      from:          ME.username,
+      to:            activeChatUser.username,
+      text:          text,
+      timestamp:     Date.now(),
+      readBy:        [ME.username],
+      deletedFor:    [],
+      deletedForAll: false
+    });
+    saveConv(activeChatUser.username, msgs);
+    input.value = '';
+    renderMsgs();
+    renderSidebar();
+  }
+
+  function toggleSelect(id) {
+    var idx = selectedIds.indexOf(id);
+    if (idx === -1) selectedIds.push(id);
+    else            selectedIds.splice(idx, 1);
+    renderMsgs();
+    updateDelBtn();
+  }
+
+  function updateDelBtn() {
+    var btn = document.getElementById('deleteBtn');
+    if (!btn) return;
+    if (selectedIds.length) {
+      btn.classList.remove('hidden');
+      btn.textContent = '🗑 Delete (' + selectedIds.length + ')';
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
+
+  function deleteSelected() {
+    if (!selectedIds.length || !activeChatUser) return;
+    var forAll = confirm(
+      'Delete ' + selectedIds.length + ' message(s)?\n\n' +
+      'OK → Delete for EVERYONE\nCancel → Delete only for ME'
+    );
+    var msgs = getConv(activeChatUser.username);
+    msgs.forEach(function(m) {
+      if (selectedIds.indexOf(m.id) === -1) return;
+      if (forAll && m.from === ME.username) {
+        m.deletedForAll = true;
+        m.text = '';
+      } else {
+        if (!m.deletedFor) m.deletedFor = [];
+        if (m.deletedFor.indexOf(ME.username) === -1) m.deletedFor.push(ME.username);
+      }
+    });
+    saveConv(activeChatUser.username, msgs);
+    selectedIds = [];
+    renderMsgs();
+    renderSidebar();
+    updateDelBtn();
+  }
+
+  function goMyProfile()     { window.location.href = 'profile.html?user=' + ME.username; }
+  function viewChatProfile() { if (activeChatUser) window.location.href = 'profile.html?user=' + activeChatUser.username; }
+  function handleLogout()    { sessionStorage.removeItem('ripple_session'); window.location.href = 'index.html'; }
+
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+</script>
+
+</body>
+</html>

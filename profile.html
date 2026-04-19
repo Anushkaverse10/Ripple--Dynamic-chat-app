@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile — Ripple</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/profile.css" />
+</head>
+<body class="profile-body">
+
+  <div class="profile-page">
+    <button type="button" class="back-btn" onclick="history.back()">← Back</button>
+
+    <div class="profile-card" id="profileCard">
+
+      <div class="profile-av-wrap">
+        <div class="av av-xl" id="profAv"></div>
+      </div>
+
+      <div class="profile-info">
+        <h2 id="profName"></h2>
+        <p class="prof-username" id="profUser"></p>
+        <p class="prof-bio"      id="profBio"></p>
+        <p class="prof-joined"   id="profJoined"></p>
+      </div>
+
+      <div class="edit-section" id="editSection" style="display:none">
+        <h3 class="edit-title">Edit Profile</h3>
+        <div class="form-group">
+          <label for="editName">Display Name</label>
+          <input type="text" id="editName" />
+        </div>
+        <div class="form-group">
+          <label for="editBio">Bio</label>
+          <input type="text" id="editBio" placeholder="Something about you..." />
+        </div>
+        <div class="form-group">
+          <label>Avatar</label>
+          <div class="avatar-grid" id="editAvatarGrid">
+            <button type="button" class="av-btn" data-av="🐶" onclick="pickEditAvatar(this)">🐶</button>
+            <button type="button" class="av-btn" data-av="🐱" onclick="pickEditAvatar(this)">🐱</button>
+            <button type="button" class="av-btn" data-av="🦊" onclick="pickEditAvatar(this)">🦊</button>
+            <button type="button" class="av-btn" data-av="🐼" onclick="pickEditAvatar(this)">🐼</button>
+            <button type="button" class="av-btn" data-av="🐸" onclick="pickEditAvatar(this)">🐸</button>
+            <button type="button" class="av-btn" data-av="🦁" onclick="pickEditAvatar(this)">🦁</button>
+            <button type="button" class="av-btn" data-av="🐯" onclick="pickEditAvatar(this)">🐯</button>
+            <button type="button" class="av-btn" data-av="🦄" onclick="pickEditAvatar(this)">🦄</button>
+            <button type="button" class="av-btn" data-av="🐲" onclick="pickEditAvatar(this)">🐲</button>
+            <button type="button" class="av-btn" data-av="🦋" onclick="pickEditAvatar(this)">🦋</button>
+          </div>
+        </div>
+        <p class="form-err" id="editErr"></p>
+        <button type="button" class="btn-primary" id="saveBtn">Save Changes</button>
+        <p class="save-ok hidden" id="saveOk">✓ Profile updated!</p>
+      </div>
+
+      <div id="msgSection" style="display:none">
+        <button type="button" class="btn-primary" id="msgBtn">Send a Message →</button>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  
+  function getUsers() {
+    try { return JSON.parse(localStorage.getItem('ripple_users') || '[]'); }
+    catch(e) { return []; }
+  }
+  function saveUsers(u) { localStorage.setItem('ripple_users', JSON.stringify(u)); }
+
+  function getCurrentUser() {
+    var u = sessionStorage.getItem('ripple_session');
+    if (!u) return null;
+    var users = getUsers();
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === u) return users[i];
+    }
+    return null;
+  }
+  
+  var ME = getCurrentUser();
+  if (!ME) { window.location.href = 'index.html'; }
+
+  var viewingUser      = null;
+  var editChosenAvatar = null;
+
+  window.addEventListener('DOMContentLoaded', function() {
+    var username = new URLSearchParams(window.location.search).get('user') || ME.username;
+    loadProfile(username);
+
+    document.getElementById('saveBtn').addEventListener('click', saveProfile);
+    document.getElementById('msgBtn').addEventListener('click', goChat);
+  });
+
+  function loadProfile(username) {
+    var users = getUsers();
+    var user  = null;
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === username) { user = users[i]; break; }
+    }
+    if (!user) {
+      document.getElementById('profileCard').innerHTML =
+        '<p style="text-align:center;color:#9aa3b8;padding:40px">User not found.</p>';
+      return;
+    }
+    viewingUser = user;
+
+    document.getElementById('profAv').textContent   = user.avatar;
+    document.getElementById('profName').textContent = user.name;
+    document.getElementById('profUser').textContent = '@' + user.username;
+    document.getElementById('profBio').textContent  = user.bio || 'No bio yet.';
+    document.getElementById('profJoined').textContent =
+      'Joined ' + new Date(user.joinedAt).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+    if (username === ME.username) {
+      document.getElementById('editSection').style.display = 'block';
+      document.getElementById('msgSection').style.display  = 'none';
+      document.title = 'My Profile — Ripple';
+      prefillEdit(user);
+    } else {
+      document.getElementById('editSection').style.display = 'none';
+      document.getElementById('msgSection').style.display  = 'block';
+    }
+  }
+
+  function prefillEdit(user) {
+    document.getElementById('editName').value = user.name;
+    document.getElementById('editBio').value  = user.bio || '';
+    editChosenAvatar = user.avatar;
+    document.querySelectorAll('#editAvatarGrid .av-btn').forEach(function(btn) {
+      if (btn.getAttribute('data-av') === user.avatar) btn.classList.add('selected');
+    });
+  }
+
+  function pickEditAvatar(btn) {
+    document.querySelectorAll('#editAvatarGrid .av-btn')
+      .forEach(function(b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    editChosenAvatar = btn.getAttribute('data-av');
+  }
+
+  function saveProfile() {
+    var newName = (document.getElementById('editName').value || '').trim();
+    var newBio  = (document.getElementById('editBio').value  || '').trim();
+    var errEl   = document.getElementById('editErr');
+    var okEl    = document.getElementById('saveOk');
+
+    errEl.textContent = '';
+    okEl.classList.add('hidden');
+
+    if (!newName) { errEl.textContent = 'Name cannot be empty.'; return; }
+
+    var users = getUsers();
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === ME.username) {
+        users[i].name   = newName;
+        users[i].bio    = newBio;
+        users[i].avatar = editChosenAvatar || users[i].avatar;
+        saveUsers(users);
+
+        document.getElementById('profName').textContent = newName;
+        document.getElementById('profBio').textContent  = newBio || 'No bio yet.';
+        document.getElementById('profAv').textContent   = users[i].avatar;
+        break;
+      }
+    }
+
+    okEl.classList.remove('hidden');
+    setTimeout(function() { okEl.classList.add('hidden'); }, 3000);
+  }
+
+  function goChat() {
+    if (viewingUser) window.location.href = 'chat.html?with=' + viewingUser.username;
+  }
+</script>
+
+</body>
+</html>

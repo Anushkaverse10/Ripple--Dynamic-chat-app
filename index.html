@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ripple — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="auth-body">
+
+  <div class="auth-split">
+
+    <div class="auth-left">
+      <div class="auth-left-inner">
+        <div class="brand-mark">
+          <div class="brand-icon">R</div>
+          <span class="brand-name">Ripple</span>
+        </div>
+        <h2 class="auth-left-title">Chat with anyone.<br/>Instantly.</h2>
+        <p class="auth-left-sub">Send messages, build your profile, and stay connected — all in one clean space.</p>
+        <div class="auth-features">
+          <div class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <strong>Real-time Messaging</strong>
+              <p>Send messages to anyone on the platform instantly.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <strong>Unique Profiles</strong>
+              <p>Pick a username, avatar and bio that's yours.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <strong>Message Control</strong>
+              <p>Delete messages for yourself or for everyone.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-card">
+
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+          <button type="button" class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+        </div>
+
+        <div id="loginPanel">
+          <h1 class="auth-heading">Welcome back!</h1>
+          <p class="auth-subhead">Sign in to continue chatting.</p>
+          <div class="form-group">
+            <label for="loginUser">Username</label>
+            <input type="text" id="loginUser" placeholder="Enter your username" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="loginPass">Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="loginPass" placeholder="Enter your password" />
+              <button type="button" class="pw-eye" onclick="togglePw('loginPass', this)">👁</button>
+            </div>
+          </div>
+          <p class="form-err" id="loginErr"></p>
+          <button type="button" class="btn-primary" id="loginBtn">Sign In</button>
+          <p class="auth-switch">Don't have an account? <a onclick="switchTab('signup')">Create one</a></p>
+        </div>
+
+        <div id="signupPanel" class="hidden">
+          <h1 class="auth-heading">Join Ripple.</h1>
+          <p class="auth-subhead">Create your account in seconds.</p>
+          <div class="form-group">
+            <label for="signupName">Display Name</label>
+            <input type="text" id="signupName" placeholder="Your name" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="signupUser">Username</label>
+            <input type="text" id="signupUser" placeholder="Choose a unique username" autocomplete="off" />
+            <span class="form-hint">Letters, numbers, underscores only</span>
+          </div>
+          <div class="form-group">
+            <label for="signupBio">Bio <span class="optional">(optional)</span></label>
+            <input type="text" id="signupBio" placeholder="Something about you..." autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="signupPass">Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="signupPass" placeholder="Min. 6 characters" />
+              <button type="button" class="pw-eye" onclick="togglePw('signupPass', this)">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Pick an Avatar</label>
+            <div class="avatar-grid" id="avatarGrid">
+              <button type="button" class="av-btn selected" data-av="🐶" onclick="pickAvatar(this)">🐶</button>
+              <button type="button" class="av-btn" data-av="🐱" onclick="pickAvatar(this)">🐱</button>
+              <button type="button" class="av-btn" data-av="🦊" onclick="pickAvatar(this)">🦊</button>
+              <button type="button" class="av-btn" data-av="🐼" onclick="pickAvatar(this)">🐼</button>
+              <button type="button" class="av-btn" data-av="🐸" onclick="pickAvatar(this)">🐸</button>
+              <button type="button" class="av-btn" data-av="🦁" onclick="pickAvatar(this)">🦁</button>
+              <button type="button" class="av-btn" data-av="🐯" onclick="pickAvatar(this)">🐯</button>
+              <button type="button" class="av-btn" data-av="🦄" onclick="pickAvatar(this)">🦄</button>
+              <button type="button" class="av-btn" data-av="🐲" onclick="pickAvatar(this)">🐲</button>
+              <button type="button" class="av-btn" data-av="🦋" onclick="pickAvatar(this)">🦋</button>
+            </div>
+          </div>
+          <p class="form-err" id="signupErr"></p>
+          <button type="button" class="btn-primary" id="signupBtn">Create Account</button>
+          <p class="auth-switch">Already have an account? <a onclick="switchTab('login')">Sign in</a></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+
+  if (sessionStorage.getItem('ripple_session')) {
+    window.location.href = 'chat.html';
+  }
+
+  function getUsers() {
+    try { return JSON.parse(localStorage.getItem('ripple_users') || '[]'); }
+    catch(e) { return []; }
+  }
+  function saveUsers(u) {
+    localStorage.setItem('ripple_users', JSON.stringify(u));
+  }
+
+  var chosenAvatar = '🐶';
+
+  function pickAvatar(btn) {
+    document.querySelectorAll('#avatarGrid .av-btn')
+      .forEach(function(b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    chosenAvatar = btn.getAttribute('data-av');
+  }
+
+  function togglePw(inputId, btn) {
+    var inp = document.getElementById(inputId);
+    if (!inp) return;
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      inp.type = 'password';
+      btn.textContent = '👁';
+    }
+  }
+
+  function switchTab(tab) {
+    var lp = document.getElementById('loginPanel');
+    var sp = document.getElementById('signupPanel');
+    var tl = document.getElementById('tab-login');
+    var ts = document.getElementById('tab-signup');
+    if (tab === 'login') {
+      lp.classList.remove('hidden');
+      sp.classList.add('hidden');
+      tl.classList.add('active');
+      ts.classList.remove('active');
+    } else {
+      lp.classList.add('hidden');
+      sp.classList.remove('hidden');
+      tl.classList.remove('active');
+      ts.classList.add('active');
+    }
+  }
+
+  function handleLogin() {
+    var username = (document.getElementById('loginUser').value || '').trim().toLowerCase();
+    var password = document.getElementById('loginPass').value || '';
+    var errEl    = document.getElementById('loginErr');
+    errEl.textContent = '';
+
+    if (!username || !password) {
+      errEl.textContent = 'Please fill in both fields.';
+      return;
+    }
+
+    var users = getUsers();
+    var found = null;
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === username && users[i].password === password) {
+        found = users[i];
+        break;
+      }
+    }
+    if (!found) {
+      errEl.textContent = 'Incorrect username or password.';
+      return;
+    }
+
+    sessionStorage.setItem('ripple_session', username);
+    window.location.href = 'chat.html';
+  }
+
+  function handleSignup() {
+    var name     = (document.getElementById('signupName').value || '').trim();
+    var username = (document.getElementById('signupUser').value || '').trim().toLowerCase();
+    var bio      = (document.getElementById('signupBio').value  || '').trim();
+    var password = document.getElementById('signupPass').value || '';
+    var errEl    = document.getElementById('signupErr');
+    errEl.textContent = '';
+
+    if (!name)     { errEl.textContent = 'Please enter your display name.'; return; }
+    if (!username) { errEl.textContent = 'Please choose a username.'; return; }
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+      errEl.textContent = 'Username: 3-20 chars, letters/numbers/underscores only.';
+      return;
+    }
+    if (!password || password.length < 6) {
+      errEl.textContent = 'Password must be at least 6 characters.';
+      return;
+    }
+
+    var users = getUsers();
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === username) {
+        errEl.textContent = 'That username is already taken. Try another!';
+        return;
+      }
+    }
+
+    var newUser = {
+      username: username,
+      name:     name,
+      bio:      bio,
+      password: password,
+      avatar:   chosenAvatar,
+      joinedAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    saveUsers(users);
+    sessionStorage.setItem('ripple_session', username);
+    window.location.href = 'chat.html';
+  }
+
+  window.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('signupBtn').addEventListener('click', handleSignup);
+
+    document.getElementById('loginPass').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+    document.getElementById('loginUser').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+    document.getElementById('signupPass').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleSignup();
+    });
+  });
+</script>
+
+</body>
+</html>

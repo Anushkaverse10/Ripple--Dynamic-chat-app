@@ -1,6 +1,6 @@
 # 💬 Ripple — Chat Web App
 
-A modern frontend chat application with simulated authentication, built using HTML, CSS, and JavaScript. This project demonstrates UI design, client-side logic, and user flow without a backend.
+A modern frontend chat application with simulated authentication, built using HTML, CSS, and JavaScript. This project demonstrates UI design, client side logic, and user flow without a backend.
 
 ---
 
@@ -12,7 +12,7 @@ A modern frontend chat application with simulated authentication, built using HT
 
 ##Features
 
-* 🔐 Sign In / Create Account (Frontend-based)
+* 🔐 Sign In / Create Account (Frontend based)
 * 💾 User data stored using localStorage
 * 💬 Basic chat interface UI
 * 🎨 Clean and responsive design
@@ -22,13 +22,12 @@ A modern frontend chat application with simulated authentication, built using HT
 
 ## How Authentication Works
 
-This app uses **client-side authentication simulation**:
+This app uses **client side authentication simulation**:
 
 * When a user signs up → credentials are stored in **localStorage**
 * During login → input is matched with stored data
 * If matched → user is redirected to chat page
 
-Note:
 This is a **demo implementation** and not secure. No backend or database is used.
 
 ---
@@ -46,9 +45,9 @@ This is a **demo implementation** and not secure. No backend or database is used
 ```
 chat-app/
 │
-├── index.html        # Login / Signup page
-├── chat.html         # Chat UI
-├── profile.html      # User profile page
+├── index.html        
+├── chat.html        
+├── profile.html      
 │
 ├── css/
 │   ├── style.css
@@ -62,28 +61,6 @@ chat-app/
 │
 └── assets/ (optional images/icons)
 ```
-
----
-
-##Getting Started
-
-1. Clone the repository
-
-```
-git clone https://github.com/your-username/chat-app.git
-```
-
-2. Open `index.html` in your browser
-
----
-
-##Limitations
-
-* No backend (authentication is not secure)
-* Data is stored only in the browser
-* No real-time messaging
-
----
 
 ## Future Improvements
 

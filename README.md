@@ -6,7 +6,7 @@ A modern frontend chat application with simulated authentication, built using HT
 
 ## Live Demo
 
-🔗 https://charming-custard-538ecb.netlify.app/
+ https://charming-custard-538ecb.netlify.app/
 
 ---
 
@@ -32,7 +32,7 @@ This is a **demo implementation** and not secure. No backend or database is used
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 * HTML5
 * CSS3 (Custom Styling)
@@ -78,7 +78,7 @@ Frontend Developer
 
 ---
 
-## ⭐ If you like this project
+##  If you like this project
 
 Give it a star on GitHub!
 
